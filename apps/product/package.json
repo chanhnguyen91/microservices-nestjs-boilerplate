@@ -1,0 +1,9 @@
+{
+  "name": "product",
+  "version": "1.0.0",
+  "description": "Product microservice",
+  "scripts": {
+    "build": "nest build",
+    "start": "nest start --watch"
+  }
+}
