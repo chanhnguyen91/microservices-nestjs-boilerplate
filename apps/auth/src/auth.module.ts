@@ -7,12 +7,17 @@ import { redisStore } from 'cache-manager-redis-store';
 import { CqrsModule } from '@nestjs/cqrs';
 import { AuthController } from './interfaces/controllers/auth.controller';
 import { UserCreationSaga } from './application/sagas/user-creation.saga';
+import { AuthService } from './application/services/auth.service';
 import { PrismaService } from './infrastructure/prisma/prisma.service';
+import { UserRepository } from './infrastructure/prisma/user.repository';
 import { RabbitMQService } from '@libs/common';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true }),
+    ConfigModule.forRoot({
+      isGlobal: true,
+      envFilePath: ['apps/auth/.env', '.env'],
+    }),
     JwtModule.registerAsync({
       useFactory: (configService: ConfigService) => ({
         secret: configService.get<string>('JWT_SECRET'),
@@ -41,6 +46,8 @@ import { RabbitMQService } from '@libs/common';
   controllers: [AuthController],
   providers: [
     PrismaService,
+    UserRepository,
+    AuthService,
     RabbitMQService,
     UserCreationSaga,
   ],

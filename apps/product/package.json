@@ -5,5 +5,26 @@
   "scripts": {
     "build": "nest build",
     "start": "nest start --watch"
+  },
+  "dependencies": {
+    "@nestjs/common": "^10.0.0",
+    "@nestjs/core": "^10.0.0",
+    "@nestjs/config": "^3.0.0",
+    "@nestjs/microservices": "^10.0.0",
+    "@nestjs/cache-manager": "^2.0.0",
+    "@nestjs/cqrs": "^10.0.0",
+    "@prisma/client": "^5.0.0",
+    "cache-manager": "^5.0.0",
+    "cache-manager-redis-store": "^3.0.0",
+    "amqplib": "^0.10.0",
+    "uuid": "^9.0.0",
+    "rxjs": "^7.8.0"
+  },
+  "devDependencies": {
+    "@nestjs/cli": "^10.0.0",
+    "@nestjs/schematics": "^10.0.0",
+    "@types/node": "^20.0.0",
+    "prisma": "^5.0.0",
+    "typescript": "^5.0.0"
   }
 }

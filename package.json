@@ -4,10 +4,11 @@
   "description": "NestJS Microservices Boilerplate with DDD, Saga, and RBAC",
   "scripts": {
     "build": "nest build",
-    "start:auth": "nest start auth --watch",
-    "start:product": "nest start product --watch",
+    "start:auth": "cd apps/auth && npm run start",
+    "start:product": "cd apps/product && npm run start",
     "prisma:generate": "prisma generate --schema=./apps/auth/prisma/schema.prisma && prisma generate --schema=./apps/product/prisma/schema.prisma",
-    "prisma:migrate": "prisma migrate deploy --schema=./apps/auth/prisma/schema.prisma && prisma migrate deploy --schema=./apps/product/prisma/schema.prisma",
+    "prisma:migrate": "cd apps/auth && npx prisma migrate dev --name init --schema=prisma/schema.prisma && cd ../product && npx prisma migrate dev --name init --schema=prisma/schema.prisma",
+    "prisma:migrate:other": "cd apps/auth && npx prisma migrate dev --schema=prisma/schema.prisma && cd ../product && npx prisma migrate dev --schema=prisma/schema.prisma",
     "docker:up": "docker-compose up -d",
     "docker:down": "docker-compose down"
   },

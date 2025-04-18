@@ -1,4 +1,7 @@
 node_modules/
 dist/
 .env
+apps/auth/.env
+apps/product/.env
 *.log
+.DS_Store

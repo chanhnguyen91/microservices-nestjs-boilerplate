@@ -6,12 +6,17 @@ import { redisStore } from 'cache-manager-redis-store';
 import { CqrsModule } from '@nestjs/cqrs';
 import { ProductController } from './interfaces/controllers/product.controller';
 import { ProductCreationSaga } from './application/sagas/product-creation.saga';
+import { ProductService } from './application/services/product.service';
 import { PrismaService } from './infrastructure/prisma/prisma.service';
+import { ProductRepository } from './infrastructure/prisma/product.repository';
 import { RabbitMQService } from '@libs/common';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true }),
+    ConfigModule.forRoot({
+      isGlobal: true,
+      envFilePath: ['apps/product/.env', '.env'],
+    }),
     CacheModule.registerAsync({
       useFactory: async (configService: ConfigService) => ({
         store: await redisStore({
@@ -33,6 +38,8 @@ import { RabbitMQService } from '@libs/common';
   controllers: [ProductController],
   providers: [
     PrismaService,
+    ProductRepository,
+    ProductService,
     RabbitMQService,
     ProductCreationSaga,
   ],
