@@ -1,0 +1,11 @@
+{
+  "name": "gateway",
+  "version": "1.0.0",
+  "scripts": {
+    "start": "nest start",
+    "start:dev": "nest start --watch --tsConfig tsconfig.dev.json",
+    "build": "nest build",
+    "prisma:migrate": "npx prisma migrate dev",
+    "seed": "ts-node --project tsconfig.seed.json --transpile-only prisma/seed.ts"
+  }
+}

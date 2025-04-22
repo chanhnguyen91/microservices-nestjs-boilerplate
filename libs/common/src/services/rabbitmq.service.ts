@@ -13,8 +13,6 @@ export class RabbitMQService {
         urls: [this.configService.get<string>('RABBITMQ_URL') || 'amqp://admin:admin@localhost:5672'],
         queue,
         queueOptions: { durable: true },
-        exchange: 'appEvents',
-        exchangeType: 'topic',
       },
     });
   }

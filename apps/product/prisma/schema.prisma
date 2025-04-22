@@ -4,22 +4,14 @@ generator client {
 
 datasource db {
   provider = "mysql"
-  url      = env("DATABASE_URL")
+  url      = env("PRODUCT_DATABASE_URL")
 }
 
-model Product {
-  id          Int      @id @default(autoincrement())
-  name        String
-  price       Float
-  createdBy   Int
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-}
-
-model DomainEvent {
-  id          Int      @id @default(autoincrement())
-  aggregateId String
-  eventName   String
-  payload     Json
-  createdAt   DateTime @default(now())
+model products {
+  id        Int      @id @default(autoincrement())
+  name      String
+  price     Float
+  stock     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }

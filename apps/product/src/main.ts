@@ -1,24 +1,22 @@
 import { NestFactory } from '@nestjs/core';
-import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 import { ProductModule } from './product.module';
-import { Logger } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
+import { ValidationPipe } from '@nestjs/common';
+import { RedisService } from 'libs/common/src/redis/redis.service';
+import { TracingService } from 'libs/common/src/tracing/tracing.service';
+import helmet from 'helmet';
 
 async function bootstrap() {
-  const app = await NestFactory.createMicroservice<MicroserviceOptions>(ProductModule, {
-    transport: Transport.RMQ,
-    options: {
-      urls: [process.env.RABBITMQ_URL || 'amqp://admin:admin@localhost:5672'],
-      queue: 'productMicroserviceQueue',
-      queueOptions: { durable: true },
-      exchange: 'appEvents',
-      exchangeType: 'topic',
-    },
-  });
+  const app = await NestFactory.create(ProductModule);
+  app.useGlobalPipes(new ValidationPipe({ transform: true }));
+  app.use(helmet());
+  app.enableCors();
 
-  const configService = app.get(ConfigService);
-  await app.listen();
-  Logger.log(`Product microservice is listening, NODE_ENV: ${configService.get<string>('NODE_ENV')}`, 'Bootstrap');
+  const tracingService = app.get(TracingService);
+  await tracingService.onModuleInit();
+
+  const redisService = app.get(RedisService);
+  await redisService.registerService('product', 'http://localhost:3001');
+
+  await app.listen(3001);
 }
-
 bootstrap();

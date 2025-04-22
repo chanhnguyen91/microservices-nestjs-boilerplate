@@ -7,36 +7,34 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
+model auth_users {
   id        Int      @id @default(autoincrement())
-  email     String   @unique
+  username  String   @unique
   password  String
-  roles     Role[]
+  roleId    Int
+  role      auth_roles     @relation(fields: [roleId], references: [id])
+  status    String   @default("active")
+  sessions  auth_sessions[]
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
 }
 
-model Role {
-  id          Int          @id @default(autoincrement())
-  name        String       @unique
-  permissions Permission[]
-  users       User[]
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
+model auth_roles {
+  id          Int              @id @default(autoincrement())
+  name        String           @unique
+  permissions auth_permissions[] @relation("RoleToPermission")
+  users       auth_users[]
 }
 
-model Permission {
+model auth_permissions {
+  id    Int         @id @default(autoincrement())
+  name  String      @unique
+  roles auth_roles[] @relation("RoleToPermission")
+}
+
+model auth_sessions {
   id        Int      @id @default(autoincrement())
-  name      String   @unique
-  roles     Role[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-model DomainEvent {
-  id          Int      @id @default(autoincrement())
-  aggregateId String
-  eventName   String
-  payload     Json
-  createdAt   DateTime @default(now())
+  userId    Int
+  user      auth_users @relation(fields: [userId], references: [id])
+  jti       String   @unique
+  expiresAt DateTime
 }
