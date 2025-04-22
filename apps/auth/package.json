@@ -1,32 +1,11 @@
 {
   "name": "auth",
   "version": "1.0.0",
-  "description": "Auth microservice",
   "scripts": {
+    "start": "nest start",
+    "start:dev": "nest start --watch --tsConfig tsconfig.dev.json",
     "build": "nest build",
-    "start": "nest start --watch"
-  },
-  "dependencies": {
-    "@nestjs/common": "^10.0.0",
-    "@nestjs/core": "^10.0.0",
-    "@nestjs/config": "^3.0.0",
-    "@nestjs/jwt": "^10.0.0",
-    "@nestjs/microservices": "^10.0.0",
-    "@nestjs/cache-manager": "^2.0.0",
-    "@nestjs/cqrs": "^10.0.0",
-    "@prisma/client": "^5.0.0",
-    "cache-manager": "^5.0.0",
-    "cache-manager-redis-store": "^3.0.0",
-    "jsonwebtoken": "^9.0.0",
-    "amqplib": "^0.10.0",
-    "uuid": "^9.0.0",
-    "rxjs": "^7.8.0"
-  },
-  "devDependencies": {
-    "@nestjs/cli": "^10.0.0",
-    "@nestjs/schematics": "^10.0.0",
-    "@types/node": "^20.0.0",
-    "prisma": "^5.0.0",
-    "typescript": "^5.0.0"
+    "prisma:migrate": "npx prisma migrate dev",
+    "seed": "ts-node --project tsconfig.seed.json --transpile-only prisma/seed.ts"
   }
 }

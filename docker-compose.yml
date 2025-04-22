@@ -1,11 +1,22 @@
+version: '3.8'
 services:
+  nginx:
+    image: nginx:latest
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+    depends_on:
+      - gateway
+    networks:
+      - app-network
+
   mysql:
     image: mysql:8.0
     environment:
       - MYSQL_ROOT_PASSWORD=root
       - MYSQL_USER=user
       - MYSQL_PASSWORD=password
-      # - MYSQL_DATABASE=auth_db
     volumes:
       - mysql-data:/var/lib/mysql
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
@@ -13,13 +24,23 @@ services:
       - "3316:3306"
     networks:
       - app-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      retries: 5
 
   redis:
     image: redis:7.0
     ports:
       - "6389:6379"
+    volumes:
+      - redis-data:/data
     networks:
       - app-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      retries: 5
 
   rabbitmq:
     image: rabbitmq:3.12-management
@@ -29,11 +50,184 @@ services:
     ports:
       - "5972:5672"
       - "19672:15672"
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD", "rabbitmqctl", "status"]
+      interval: 10s
+      retries: 5
+
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    ports:
+      - "16686:16686"
+      - "14268:14268"
+      - "14250:14250"
+    environment:
+      - SPAN_STORAGE_TYPE=elasticsearch
+      - ES_SERVER_URLS=http://elasticsearch:9200
+    depends_on:
+      - elasticsearch
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "http://localhost:16686"]
+      interval: 10s
+      retries: 5
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.8.0
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+    ports:
+      - "9200:9200"
+    volumes:
+      - es-data:/usr/share/elasticsearch/data
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9200"]
+      interval: 10s
+      retries: 5
+
+  logstash:
+    image: docker.elastic.co/logstash/logstash:8.8.0
+    ports:
+      - "5044:5044"
+    volumes:
+      - ./logstash.conf:/usr/share/logstash/pipeline/logstash.conf
+    depends_on:
+      - elasticsearch
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9600"]
+      interval: 10s
+      retries: 5
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.8.0
+    ports:
+      - "5601:5601"
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+    depends_on:
+      - elasticsearch
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5601"]
+      interval: 10s
+      retries: 5
+
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "http://localhost:9090"]
+      interval: 10s
+      retries: 5
+
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3003:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - grafana-data:/var/lib/grafana
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000"]
+      interval: 10s
+      retries: 5
+
+  auth:
+    build:
+      context: ./apps/auth
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - DATABASE_URL=mysql://user:password@mysql:3306/auth_db
+      - REDIS_URL=redis://redis:6379
+      - RABBITMQ_URL=amqp://admin:admin@rabbitmq:5672
+      - JWT_SECRET=your-jwt-secret
+      - REFRESH_TOKEN_SECRET=your-refresh-secret
+      - JAEGER_URL=http://jaeger:14268/api/traces
+      - LOGSTASH_HOST=logstash
+      - LOGSTASH_PORT=5044
+      - SERVICE_NAME=auth
+    depends_on:
+      - mysql
+      - redis
+      - rabbitmq
+      - jaeger
+      - logstash
+    networks:
+      - app-network
+
+  product:
+    build:
+      context: ./apps/product
+      dockerfile: Dockerfile
+    ports:
+      - "3001:3001"
+    environment:
+      - PRODUCT_DATABASE_URL=mysql://user:password@mysql:3306/product_db
+      - REDIS_URL=redis://redis:6379
+      - RABBITMQ_URL=amqp://admin:admin@rabbitmq:5672
+      - JAEGER_URL=http://jaeger:14268/api/traces
+      - LOGSTASH_HOST=logstash
+      - LOGSTASH_PORT=5044
+      - SERVICE_NAME=product
+    depends_on:
+      - mysql
+      - redis
+      - rabbitmq
+      - jaeger
+      - logstash
+    networks:
+      - app-network
+
+  gateway:
+    build:
+      context: ./apps/gateway
+      dockerfile: Dockerfile
+    ports:
+      - "3002:3002"
+    environment:
+      - REDIS_URL=redis://redis:6379
+      - JWT_SECRET=your-jwt-secret
+      - JAEGER_URL=http://jaeger:14268/api/traces
+      - LOGSTASH_HOST=logstash
+      - LOGSTASH_PORT=5044
+      - SERVICE_NAME=gateway
+    depends_on:
+      - auth
+      - product
+      - redis
+      - jaeger
+      - logstash
     networks:
       - app-network
 
 volumes:
   mysql-data:
+  redis-data:
+  rabbitmq-data:
+  es-data:
+  grafana-data:
 
 networks:
   app-network:

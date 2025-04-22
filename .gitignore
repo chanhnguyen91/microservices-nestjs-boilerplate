@@ -4,4 +4,3 @@ dist/
 apps/auth/.env
 apps/product/.env
 *.log
-.DS_Store
