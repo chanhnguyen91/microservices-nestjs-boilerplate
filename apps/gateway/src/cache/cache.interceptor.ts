@@ -11,7 +11,7 @@ export class CacheInterceptor implements NestInterceptor {
     const request = context.switchToHttp().getRequest();
     if (request.method !== 'GET') return next.handle();
 
-    const cacheKey = ;
+    const cacheKey = `${request.method}:${request.url}`;
     const cachedResponse = await this.redisService.get(cacheKey);
     if (cachedResponse) {
       return of(JSON.parse(cachedResponse));

@@ -22,7 +22,7 @@ export class GatewayController {
   @UseGuards(JwtAuthGuard)
   @Get('products/:id')
   proxyGetProduct(@Param('id') id: string, @Request() req: any) {
-    return this.gatewayService.proxyRequest('product', req.method, , null, req.user);
+    return this.gatewayService.proxyRequest('product', req.method, `/products/${id}`, null, req.user);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -34,13 +34,13 @@ export class GatewayController {
   @UseGuards(JwtAuthGuard)
   @Put('products/:id')
   proxyUpdateProduct(@Param('id') id: string, @Body() body: any, @Request() req: any) {
-    return this.gatewayService.proxyRequest('product', req.method, , body, req.user);
+    return this.gatewayService.proxyRequest('product', req.method, `/products/${id}`, body, req.user);
   }
 
   @UseGuards(JwtAuthGuard)
   @Delete('products/:id')
   proxyDeleteProduct(@Param('id') id: string, @Request() req: any) {
-    return this.gatewayService.proxyRequest('product', req.method, , null, req.user);
+    return this.gatewayService.proxyRequest('product', req.method, `/products/${id}`, null, req.user);
   }
 
   @Post('auth/login')
